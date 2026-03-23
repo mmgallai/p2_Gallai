@@ -1,0 +1,3 @@
+<launch>
+  <node name="navigator" pkg="p2_mgallai" type="route_navigator.py" output="screen" />
+</launch>
