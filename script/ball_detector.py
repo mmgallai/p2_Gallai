@@ -12,30 +12,23 @@ class BallTracker:
         self.bridge = CvBridge()
         self.pub = rospy.Publisher('/cmd_vel_mux/input/teleop', Twist, queue_size=1)
 
-        # HSV color range for green ball
-        # If detection is unreliable, these are the only values to tune
+        # HSV color range for green ball (tune these if detection is unreliable)
         self.lower_green = np.array([35, 40, 40])
         self.upper_green = np.array([90, 255, 255])
 
-        # Distance control — real metres from depth sensor
-        self.TARGET_DIST = 1.00   # follow at 1 metre (~3 feet)
-        self.STOP_DIST   = 0.80   # reverse if closer than this
-        self.MAX_SPEED   = 0.20   # maximum forward AND reverse speed
+        # Distance control parameters (in meters)
+        self.TARGET_DIST = 1.00
+        self.STOP_DIST   = 0.80
+        self.MAX_SPEED   = 0.20
 
-        # Store latest depth frame
         self.latest_depth = None
 
-        # RGB subscriber — finds the ball position
         rospy.Subscriber("/camera/color/image_raw", Image,
-                         self.rgb_callback,
-                         queue_size=1, buff_size=2**24)
+                         self.rgb_callback, queue_size=1, buff_size=2**24)
 
-        # Depth subscriber — measures real distance to ball
         rospy.Subscriber("/camera/depth/image_raw", Image,
-                         self.depth_callback,
-                         queue_size=1, buff_size=2**24)
+                         self.depth_callback, queue_size=1, buff_size=2**24)
 
-    # ------------------------------------------------------------------
     def depth_callback(self, data):
         """Store the latest depth frame for use in rgb_callback."""
         try:
@@ -44,17 +37,16 @@ class BallTracker:
             rospy.logerr_throttle(2, f"Depth CvBridge error: {e}")
             return
 
-        # Normalise mm → metres for 16UC1 cameras (RealSense, Kinect etc.)
+        # Normalise mm to metres for 16UC1 cameras
         if depth.dtype == np.uint16:
             depth = depth.astype(np.float32) / 1000.0
 
         self.latest_depth = depth
 
-    # ------------------------------------------------------------------
     def rgb_callback(self, data):
         """Detect ball using color, measure distance using depth, control robot."""
         if self.latest_depth is None:
-            return  # wait until we have at least one depth frame
+            return 
 
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
@@ -62,7 +54,6 @@ class BallTracker:
             rospy.logerr_throttle(2, f"RGB CvBridge error: {e}")
             return
 
-        # --- Color detection ---
         hsv  = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, self.lower_green, self.upper_green)
 
@@ -75,15 +66,12 @@ class BallTracker:
             area    = cv2.contourArea(largest)
 
             if area > 1500:
-                # Ball centre in image pixels
                 M  = cv2.moments(largest)
                 cx = int(M['m10'] / M['m00'])
                 cy = int(M['m01'] / M['m00'])
 
-                # Steering error — how far off-centre the ball is
                 err = cx - (cv_image.shape[1] / 2)
 
-                # --- Read real distance from depth at ball centre ---
                 h, w = self.latest_depth.shape
                 cx_s = max(0, min(cx, w - 1))
                 cy_s = max(0, min(cy, h - 1))
@@ -96,25 +84,17 @@ class BallTracker:
                     valid    = patch[patch > 0]
                     distance = float(np.median(valid)) if len(valid) > 0 else 999.0
 
-                # --- Steering: always active when ball is visible ---
                 move.angular.z = -float(err) / 250
 
-                # --- Forward / reverse based on real distance ---
                 if distance > self.TARGET_DIST:
-                    # Ball is far — move forward, scale speed by how far
                     move.linear.x = min(self.MAX_SPEED,
                                         0.30 * (distance - self.TARGET_DIST))
-
                 elif distance < self.STOP_DIST:
-                    # Ball is too close — reverse proportionally
                     move.linear.x = max(-self.MAX_SPEED,
                                         -0.30 * (self.TARGET_DIST - distance))
-
                 else:
-                    # Ball is in the acceptable zone — hold position
                     move.linear.x = 0.0
 
-                # Determine state label for logging
                 if distance > self.TARGET_DIST:
                     state = "FORWARD"
                 elif distance < self.STOP_DIST:

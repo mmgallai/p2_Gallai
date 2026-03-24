@@ -7,7 +7,6 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import Twist
 
-
 class BonusBallTracker:
     def __init__(self):
         rospy.init_node('bonus_vision_depth_only')
@@ -25,7 +24,6 @@ class BonusBallTracker:
         self.min_circularity = rospy.get_param("~min_circularity",  0.45)
         self.min_fill_ratio  = rospy.get_param("~min_fill_ratio",   0.40)
 
-        # 1 METRE FOLLOWING DISTANCE
         self.target_distance  = rospy.get_param("~target_distance",  1.00)
         self.stop_distance    = rospy.get_param("~stop_distance",    0.80)
 
@@ -52,7 +50,6 @@ class BonusBallTracker:
             queue_size=1, buff_size=2**24
         )
 
-    # ------------------------------------------------------------------
     def _to_meters(self, depth_image):
         if depth_image.dtype == np.uint16:
             return depth_image.astype(np.float32) / 1000.0
@@ -63,7 +60,6 @@ class BonusBallTracker:
             return False
         return (rospy.Time.now() - self.last_seen_time).to_sec() < self.memory_timeout
 
-    # ------------------------------------------------------------------
     def _build_depth_mask(self, depth_m):
         valid = depth_m[(depth_m > self.min_depth) & (depth_m < self.max_depth)]
         if valid.size < 50:
@@ -103,7 +99,6 @@ class BonusBallTracker:
 
             return best_mask, best_ref
 
-    # ------------------------------------------------------------------
     def _find_best_ball(self, depth_m, mask):
         contours_info = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         contours = contours_info[0] if len(contours_info) == 2 else contours_info[1]
@@ -179,7 +174,6 @@ class BonusBallTracker:
 
         return best
 
-    # ------------------------------------------------------------------
     def _make_debug_image(self, depth_m, mask=None):
         clipped = np.clip(depth_m, self.min_depth, self.max_depth)
         norm    = ((clipped - self.min_depth) /
@@ -193,7 +187,6 @@ class BonusBallTracker:
             debug = cv2.addWeighted(debug, 0.75, overlay, 0.25, 0)
         return debug
 
-    # ------------------------------------------------------------------
     def _smooth_cmd(self, target_linear, target_angular):
         self.smooth_linear  = (self.cmd_alpha * target_linear  +
                                (1.0 - self.cmd_alpha) * self.smooth_linear)
@@ -201,7 +194,6 @@ class BonusBallTracker:
                                (1.0 - self.cmd_alpha) * self.smooth_angular)
         return self.smooth_linear, self.smooth_angular
 
-    # ------------------------------------------------------------------
     def depth_callback(self, data):
         move = Twist()
 
@@ -256,17 +248,13 @@ class BonusBallTracker:
                 err_x       = cx - (self.image_width / 2.0)
                 raw_angular = 0.0
 
-            # --- REVERSE ADDED HERE ---
             if HIGH_QUALITY and distance > self.target_distance:
-                # Ball is far — move forward
                 raw_linear = min(self.max_linear,
                                  self.linear_gain * (distance - self.target_distance))
             elif HIGH_QUALITY and distance < self.stop_distance:
-                # Ball is too close — back up proportionally
                 raw_linear = max(-self.max_linear,
                                  -self.linear_gain * (self.target_distance - distance))
             else:
-                # Ball is within acceptable range — hold position
                 raw_linear = 0.0
 
             lin, ang = self._smooth_cmd(raw_linear, raw_angular)
@@ -299,7 +287,6 @@ class BonusBallTracker:
         self.pub.publish(move)
         cv2.imshow("Depth Ball Tracker", debug_image)
         cv2.waitKey(3)
-
 
 if __name__ == '__main__':
     tracker = BonusBallTracker()
