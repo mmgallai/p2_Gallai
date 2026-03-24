@@ -3,7 +3,7 @@
 ![ROS](https://img.shields.io/badge/ROS-Noetic-blue) ![Python](https://img.shields.io/badge/Python-3.8-yellow) ![Status](https://img.shields.io/badge/Status-Complete-brightgreen)
 
 <div align="center">
-  <video src="./misc/Color_Tracking_gif.mov" autoplay loop muted playsinline width="600"></video>
+
   
   ### [🎥 Watch the full physical robot demonstration here](https://drive.google.com/drive/folders/1YhiN6csOkUlHZVuiley6NDc9Yqo7oMBc?usp=sharing)
 </div>
