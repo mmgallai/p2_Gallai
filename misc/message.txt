@@ -1,0 +1,4 @@
+Individual assignment by Mohamed Gallai
+Two options for ball tracking:
+1. using colors
+2. using only the depth (bonus)
