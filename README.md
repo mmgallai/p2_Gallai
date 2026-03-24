@@ -45,5 +45,6 @@ roslaunch p2_Gallai p2a.launch
 roslaunch p2_Gallai p2b.launch
 ```
 
-**Acknowledgments & Collaborators**
-Author: Mohamed Gallai
+## Acknowledgments & Collaborators**
+**Author:** 
+Mohamed Gallai
