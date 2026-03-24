@@ -34,8 +34,11 @@ The code is designed to run in a standard catkin workspace.
 **For Autonomous Navigation (Part 1):**
 ```bash
 roslaunch p2_Gallai p2a.launch
-
+```
 **For Vision Tracking (Part 2):**
 ```bash
 roslaunch p2_Gallai p2b.launch
+```
 
+## Author: 
+Mohamed Gallai
