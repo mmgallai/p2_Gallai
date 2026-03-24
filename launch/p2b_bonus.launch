@@ -1,3 +1,36 @@
 <launch>
-  <node name="bonus_vision" pkg="p2_mgallai" type="bonus_detector.py" output="screen" />
+  <node name="bonus_vision"
+        pkg="p2_mgallai"
+        type="bonus_detector.py"
+        output="screen">
+
+    <!-- Depth sensing range -->
+    <param name="min_depth"        value="0.30"/>
+    <param name="max_depth"        value="3.50"/>
+    <param name="depth_band"       value="0.35"/>
+
+    <!-- Blob detection -->
+    <param name="min_area"         value="200"/>
+    <param name="min_radius"       value="8"/>
+    <param name="max_radius"       value="180"/>
+    <param name="min_circularity"  value="0.45"/>
+    <param name="min_fill_ratio"   value="0.40"/>
+
+    <!-- 1 METRE FOLLOWING DISTANCE -->
+    <param name="target_distance"  value="1.00"/>
+    <param name="stop_distance"    value="0.80"/>
+
+    <!-- Speed -->
+    <param name="max_linear"       value="0.35"/>
+    <param name="linear_gain"      value="0.45"/>
+    <param name="angular_gain"     value="0.70"/>
+
+    <!-- Tracking quality -->
+    <param name="memory_timeout"   value="2.0"/>
+    <param name="edge_reject_frac" value="0.72"/>
+    <param name="cmd_alpha"        value="0.35"/>
+    <param name="hq_circularity"   value="0.60"/>
+    <param name="hq_fill_ratio"    value="0.55"/>
+
+  </node>
 </launch>

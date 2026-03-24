@@ -10,6 +10,7 @@ class TurtlebotNavigator:
         self.pos_sub = rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, self.update_pose)
         self.goal_pub = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=10)
         
+        # L2 -> L3 -> L1 (Return Start)
         self.waypoints = [
             {'x': -1.781, 'y': 3.698, 'label': 'L2'},
             {'x': -5.346, 'y': 1.075, 'label': 'L3'},
@@ -40,9 +41,9 @@ class TurtlebotNavigator:
             rospy.sleep(2.0)
         rospy.loginfo("--- Mission Complete ---")
 
-    if __name__ == '__main__':
-        try:
-            nav = TurtlebotNavigator()
-            nav.run()
-        except rospy.ROSInterruptException: 
-            pass
+if __name__ == '__main__':
+    try:
+        nav = TurtlebotNavigator()
+        nav.run()
+    except rospy.ROSInterruptException: 
+        pass
